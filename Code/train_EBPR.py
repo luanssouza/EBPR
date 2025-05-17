@@ -40,8 +40,13 @@ def main(args):
     test_data = sample_generator.test_data_loader(config['batch_size'])
 
     # Create explainability matrix
-    explainability_matrix = sample_generator.create_explainability_matrix()
-    test_explainability_matrix = sample_generator.create_explainability_matrix(include_test=True)
+    _, _, _, explainability_matrix = sample_generator.create_explainability_matrix()
+    # print(explainability_matrix.shape)
+    _, _, _, test_explainability_matrix = sample_generator.create_explainability_matrix(include_test=True)
+    # print(len(test_explainability_matrix[0]))
+    # print(len(test_explainability_matrix))
+    # print(test_explainability_matrix.shape)
+    # return 
 
     # Create popularity vector
     popularity_vector = sample_generator.create_popularity_vector()

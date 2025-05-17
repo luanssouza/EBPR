@@ -1,6 +1,6 @@
 import math
 import pandas as pd
-from ml_metrics import mapk
+#from ml_metrics import mapk
 import numpy as np
 from itertools import combinations
 import sys
@@ -80,13 +80,22 @@ class MetronAtK(object):
         users = list(dict.fromkeys(list(full['user'])))
         actual = [list(full[(full['user'] == user) & (full['rank_true'] <= top_k)]['test_item']) for user in users]
         predicted = [list(full[(full['user'] == user) & (full['rank'] <= top_k)]['test_item']) for user in users]
-        return mapk(actual, predicted, k=top_k)
+        print(actual)
+        print(predicted)
+        print("#############")
+        return 10.999
+        # i = 0
+        # for i in 
+
+        #return mapk(actual, predicted, k=top_k)
 
     def cal_hit_ratio_loo(self):
         """HR@K for Leave-One-Out evaluation"""
         full, top_k = self._subjects, self._top_k
         top_k = full[full['rank'] <= top_k]
         test_in_top_k = top_k[top_k['test_item'] == top_k['item']]  # golden items hit in the top_K items
+        if len(test_in_top_k) == 0:
+            return 0
         return len(test_in_top_k) * 1.0 / full['user'].nunique()
 
     def cal_ndcg_loo(self):
@@ -102,6 +111,8 @@ class MetronAtK(object):
         """Mean Explainability Precision at cutoff top_k and threshold theta"""
         full, top_k = self._subjects, self._top_k
         if self.loo_eval == True:
+            print(full)
+            print(full[['user', 'item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1))
             full['exp_score'] = full[['user', 'item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)
         else:
             full['exp_score'] = full[['user', 'test_item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)

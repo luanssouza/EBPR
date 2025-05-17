@@ -1,3 +1,13 @@
+.DS_Store
+
+Data/
+
+Results/
+Output/
+
+Results_v1/
+Output_v1/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

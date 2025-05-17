@@ -1,7 +1,7 @@
 import torch
 from Code.utils import save_checkpoint, use_optimizer, resume_checkpoint
 from Code.metrics import MetronAtK
-import pyprind
+# import pyprind
 
 
 class Engine(object):
@@ -53,12 +53,19 @@ class Engine(object):
             explainability_matrix = torch.from_numpy(explainability_matrix).float().cuda()
             popularity_vector = torch.from_numpy(popularity_vector).float().cuda()
             neighborhood = torch.from_numpy(neighborhood).cuda()
+        else:
+            explainability_matrix = torch.from_numpy(explainability_matrix).float()
+            popularity_vector = torch.from_numpy(popularity_vector).float()
+            neighborhood = torch.from_numpy(neighborhood)
         total_loss = 0
-        bar = pyprind.ProgBar(len(train_loader))
+        # bar = pyprind.ProgBar(len(train_loader))
         for batch_id, batch in enumerate(train_loader):
-            bar.update()
+            # bar.update()
             assert isinstance(batch[0], torch.LongTensor)
             user, pos_item, neg_item, rating = batch[0], batch[1], batch[2], batch[3]
+            print("Isso aqui é um teste!")
+            print(user)
+            break
             loss = self.train_single_batch_EBPR(user, pos_item, neg_item, rating, explainability_matrix, popularity_vector, neighborhood)
             total_loss += loss
 
@@ -81,6 +88,10 @@ class Engine(object):
                         test_users_eval += test_users.cpu().data.view(-1).tolist()
                         test_items_eval += test_items.cpu().data.view(-1).tolist()
                         test_scores_eval += test_scores.cpu().data.view(-1).tolist()
+                    else:
+                        test_users_eval += test_users.data.view(-1).tolist()
+                        test_items_eval += test_items.data.view(-1).tolist()
+                        test_scores_eval += test_scores.data.view(-1).tolist()
                 for batch_id, batch in enumerate(evaluate_data[1]):
                     negative_users, negative_items = batch[0], batch[1]
                     if self.config['use_cuda'] is True:
@@ -91,6 +102,10 @@ class Engine(object):
                         negative_users_eval += negative_users.cpu().data.view(-1).tolist()
                         negative_items_eval += negative_items.cpu().data.view(-1).tolist()
                         negative_scores_eval += negative_scores.cpu().data.view(-1).tolist()
+                    else:
+                        negative_users_eval += negative_users.data.view(-1).tolist()
+                        negative_items_eval += negative_items.data.view(-1).tolist()
+                        negative_scores_eval += negative_scores.data.view(-1).tolist()
                 self._metron.subjects = [test_users_eval, test_items_eval, test_scores_eval, negative_users_eval,
                                          negative_items_eval, negative_scores_eval]
                 hr, ndcg, mep, wmep, avg_pop, efd, avg_pair_sim = self._metron.cal_hit_ratio_loo(), self._metron.cal_ndcg_loo(), self._metron.cal_mep(explainability_matrix, theta=0), self._metron.cal_weighted_mep(explainability_matrix, theta=0), self._metron.avg_popularity(popularity_vector), self._metron.efd(popularity_vector), self._metron.avg_pairwise_similarity(item_similarity_matrix)
@@ -110,6 +125,11 @@ class Engine(object):
                         test_items_eval += test_items.cpu().data.view(-1).tolist()
                         test_scores_eval += test_scores.cpu().data.view(-1).tolist()
                         test_output_eval += test_output.cpu().data.view(-1).tolist()
+                    else:
+                        test_users_eval += test_users.data.view(-1).tolist()
+                        test_items_eval += test_items.data.view(-1).tolist()
+                        test_scores_eval += test_scores.data.view(-1).tolist()
+                        test_output_eval += test_output.data.view(-1).tolist()
             self._metron.subjects = [test_users_eval, test_items_eval, test_output_eval, test_scores_eval]
             map, ndcg, mep, wmep, avg_pop, efd, avg_pair_sim = self._metron.cal_map_at_k(), self._metron.cal_ndcg(), self._metron.cal_mep(explainability_matrix, theta=0), self._metron.cal_weighted_mep(explainability_matrix, theta=0), self._metron.avg_popularity(popularity_vector), self._metron.efd(popularity_vector), self._metron.avg_pairwise_similarity(item_similarity_matrix)
             print('Evaluating Epoch {}: MAP@{} = {:.4f}, NDCG@{} = {:.4f}, MEP@{} = {:.4f}, WMEP@{} = {:.4f}, Avg_Pop@{} = {:.4f}, EFD@{} = {:.4f}, Avg_Pair_Sim@{} = {:.4f}'.format(epoch_id, self.config['top_k'], map, self.config['top_k'], ndcg, self.config['top_k'], mep, self.config['top_k'], wmep, self.config['top_k'], avg_pop, self.config['top_k'], efd, self.config['top_k'], avg_pair_sim))

@@ -69,8 +69,8 @@ def main(args):
             validation_data = sample_generator.val_data_loader(config['batch_size'])
 
             # Create explainability matrix
-            explainability_matrix = sample_generator.create_explainability_matrix()
-            val_explainability_matrix = sample_generator.create_explainability_matrix(include_test=True)
+            _, _, _, explainability_matrix = sample_generator.create_explainability_matrix()
+            _, _, _, val_explainability_matrix = sample_generator.create_explainability_matrix(include_test=True)
 
             # Create popularity vector
             popularity_vector = sample_generator.create_popularity_vector()

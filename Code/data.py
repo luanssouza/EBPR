@@ -14,15 +14,30 @@ def read_data(dataset_name, int_per_item):
     """Read dataset"""
 
     dataset = pd.DataFrame()
+    # if dataset_name == 'ml-100k':
+    #     # Load Movielens 100K Data
+    #     data_dir = 'Data/ml-100k/u.data'
+    #     dataset = pd.read_csv(data_dir, sep='\t', header=None, names=['uid', 'mid', 'rating', 'timestamp'],
+    #                               engine='python')
+    # elif dataset_name == 'ml-1m':
+    #     # Load Movielens 1M Data
+    #     data_dir = 'Data/ml-1m/ratings.dat'
+    #     dataset = pd.read_csv(data_dir, sep='::', header=None, names=['uid', 'mid', 'rating', 'timestamp'],  engine='python')
+    
     if dataset_name == 'ml-100k':
         # Load Movielens 100K Data
-        data_dir = 'Data/ml-100k/u.data'
-        dataset = pd.read_csv(data_dir, sep='\t', header=None, names=['uid', 'mid', 'rating', 'timestamp'],
+        data_dir = 'Data/ml100k/train.csv'
+        dataset = pd.read_csv(data_dir, header=None, names=['uid', 'mid', 'rating', 'timestamp'],
                                   engine='python')
     elif dataset_name == 'ml-1m':
         # Load Movielens 1M Data
-        data_dir = 'Data/ml-1m/ratings.dat'
-        dataset = pd.read_csv(data_dir, sep='::', header=None, names=['uid', 'mid', 'rating', 'timestamp'],  engine='python')
+        data_dir = 'Data/ml1m/train.csv'
+        dataset = pd.read_csv(data_dir, header=None, names=['uid', 'mid', 'rating', 'timestamp'],  engine='python')
+    
+    elif dataset_name == 'lastfm-1k':
+        # Load Last.FM 1K Data
+        data_dir = 'Data/lastfm1k/train.csv'
+        dataset = pd.read_csv(data_dir, header=None, names=['uid', 'mid', 'timestamp'],  engine='python')
 
     elif dataset_name == 'lastfm-2k':
         # Load Last.FM 2K Data
@@ -62,6 +77,8 @@ def read_data(dataset_name, int_per_item):
     item_id = dataset[['mid']].drop_duplicates()
     item_id['itemId'] = np.arange(len(item_id))
     dataset = pd.merge(dataset, item_id, on=['mid'], how='left')
+    dataset.to_csv('Output/'+ dataset_name + '_mapped_dataset.csv', index=False)
+
     if 'test' in dataset:
         dataset = dataset[['userId', 'itemId', 'rating', 'timestamp', 'test']]
     else:
@@ -218,6 +235,7 @@ class SampleGenerator(object):
     def train_data_loader(self, batch_size):
         """instance train loader for one training epoch"""
         train_ratings = pd.merge(self.train_ratings, self.negatives[['userId', 'negative_items']], on='userId')
+        
         users = [int(x) for x in train_ratings['userId']]
         items = [int(x) for x in train_ratings['itemId']]
         ratings = [float(x) for x in train_ratings['rating']]
@@ -309,14 +327,21 @@ class SampleGenerator(object):
         #item_similarity_matrix = 1 - pairwise_distances(interaction_matrix.T, metric = "hamming")
         item_similarity_matrix = cosine_similarity(interaction_matrix.T)
         np.fill_diagonal(item_similarity_matrix, 0)
+        # print(item_similarity_matrix.shape)
+        # print(self.config['neighborhood'])
         neighborhood = [np.argpartition(row, - self.config['neighborhood'])[- self.config['neighborhood']:]
                         for row in item_similarity_matrix]
+        # print(len(neighborhood), neighborhood[0].shape)
         explainability_matrix = np.array([[sum([interaction_matrix[user, neighbor] for neighbor in neighborhood[item]])
                                            for item in range(self.config['num_items'])] for user in
                                           range(self.config['num_users'])]) / self.config['neighborhood']
         #explainability_matrix[explainability_matrix < 0.1] = 0
         #explainability_matrix = explainability_matrix + self.config['epsilon']
-        return explainability_matrix
+        np.save(f'Output/results/interaction_matrix_{self.config["dataset"]}_{include_test}.npy', interaction_matrix)
+        np.save(f'Output/results/item_similarity_matrix_{self.config["dataset"]}_{include_test}.npy', item_similarity_matrix)
+        np.save(f'Output/results/neighborhood_{self.config["dataset"]}_{include_test}.npy', neighborhood)
+        np.save(f'Output/results/explainability_matrix_{self.config["dataset"]}_{include_test}.npy', explainability_matrix)
+        return interaction_matrix, neighborhood, item_similarity_matrix, explainability_matrix
 
     def create_popularity_vector(self, include_test=False):
         """create popularity vector"""
