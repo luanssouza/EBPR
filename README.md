@@ -176,3 +176,27 @@ Note that, due to a consent that prevents us from sharing the Yahoo! R3 dataset,
 ## References
 [1] Rendle, Steffen, et al. "BPR: Bayesian personalized ranking from implicit feedback." arXiv preprint arXiv:1205.2618 (2012).<br>
 [2] Saito, Yuta. "Unbiased Pairwise Learning from Implicit Feedback." NeurIPS 2019 Workshop on Causal Machine Learning. 2019.
+
+## Reproducibility
+
+Before following the instructions for reproducibility, please, check the instructions of our reproducibility repository: [https://anonymous.4open.science/r/mesuaring-fairness-explainability-262E](https://anonymous.4open.science/r/mesuaring-fairness-explainability-262E)
+
+Install the requirements as in [Requirements sections](#requirements) and use the following commands to train the models:
+- M1M: `bash train_ml1m.sh`
+- M100K: `bash train_ml100k.sh`
+
+# Requirements
+python >= 3.9
+
+You can install the other requirements using: 
+```
+pip install -r requirements.txt
+```
+
+## Reproducibility
+
+Before following the instructions for reproducibility, please, check the instructions of our reproducibility repository: [https://anonymous.4open.science/r/mesuaring-fairness-explainability-262E](https://anonymous.4open.science/r/mesuaring-fairness-explainability-262E)
+
+Install the requirements as in [Requirements sections](#requirements) and use the following commands to train the models:
+- M1M: `bash train_ml1m.sh`
+- M100K: `bash train_ml100k.sh`
