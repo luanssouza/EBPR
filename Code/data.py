@@ -69,6 +69,27 @@ def read_data(dataset_name, int_per_item):
         test_dataset['test'] = [1 for i in range(len(test_dataset))]
         dataset = pd.concat([dataset, test_dataset])
         dataset['timestamp'] = [1 for i in range(len(dataset))]
+    
+    elif dataset_name == 'coat':
+        # Load Coat Data
+        data_dir = 'Data/coat/train.csv'
+        dataset = pd.read_csv(data_dir, header=None, names=['uid', 'mid', 'rating'], engine='python')
+        dataset['timestamp'] = [1 for i in range(len(dataset))]
+    elif dataset_name == 'eletronics':
+        # Load Eletronics Data
+        data_dir = 'Data/eletronics/train.csv'
+        dataset = pd.read_csv(data_dir, header=None, names=['uid', 'mid', 'rating', 'timestamp'],
+                                  engine='python')
+    elif dataset_name == 'amazon':
+        # Load amazon Data
+        data_dir = 'Data/amazon/train.csv'
+        dataset = pd.read_csv(data_dir, header=None, names=['uid', 'mid', 'rating', 'timestamp'],
+                                  engine='python')
+    elif dataset_name == 'rentrunway':
+        # Load rentrunway Data
+        data_dir = 'Data/rentrunway/train.csv'
+        dataset = pd.read_csv(data_dir, header=None, names=['uid', 'mid', 'rating', 'timestamp'],
+                                  engine='python')
 
     # Reindex data
     user_id = dataset[['uid']].drop_duplicates().reindex()
