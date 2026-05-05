@@ -1,0 +1,26 @@
+base:
+    ml100k:
+        filepath_or_buffer: 'Data/ml100k/train.csv'
+        sep: ','
+        skiprows: 0
+        names: [ 'userId', 'itemId', 'rating', 'timestamp']
+    ml1m:
+        filepath_or_buffer: 'Data/ml1m/train.csv'
+        sep: ','
+        skiprows: 0
+        names: [ 'userId', 'itemId', 'rating', 'timestamp']
+    coat:
+        filepath_or_buffer: 'Data/coat/train.csv'
+        sep: ','
+        skiprows: 0
+        names: [ 'userId', 'itemId', 'rating']
+    # eletronics:
+    #     filepath_or_buffer: 'Data/eletronics/train.csv'
+    #     sep: ','
+    #     skiprows: 0
+    #     names: [ 'userId', 'itemId', 'rating', 'timestamp']
+    # amazon:
+    #     filepath_or_buffer: 'Data/amazon/train.csv'
+    #     sep: ','
+    #     skiprows: 0
+    #     names: [ 'userId', 'itemId', 'rating', 'timestamp']

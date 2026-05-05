@@ -80,8 +80,8 @@ class MetronAtK(object):
         users = list(dict.fromkeys(list(full['user'])))
         actual = [list(full[(full['user'] == user) & (full['rank_true'] <= top_k)]['test_item']) for user in users]
         predicted = [list(full[(full['user'] == user) & (full['rank'] <= top_k)]['test_item']) for user in users]
-        print(actual)
-        print(predicted)
+        # print(actual)
+        # print(predicted)
         print("#############")
         return 10.999
         # i = 0
@@ -111,8 +111,8 @@ class MetronAtK(object):
         """Mean Explainability Precision at cutoff top_k and threshold theta"""
         full, top_k = self._subjects, self._top_k
         if self.loo_eval == True:
-            print(full)
-            print(full[['user', 'item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1))
+            # print(full)
+            # print(full[['user', 'item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1))
             full['exp_score'] = full[['user', 'item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)
         else:
             full['exp_score'] = full[['user', 'test_item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)

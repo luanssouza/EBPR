@@ -1,0 +1,83 @@
+-
+  dataset_name: ml100k
+  input_path: data/random/recbole/ml100k/saved/
+  output_path: data/random/recoxplainer/ml100k
+  models:
+    - 
+      model_name: BPR
+      model_checkpoint_path: BPR-Apr-27-2026_03-55-18.pth
+    # -
+    #   model_name: ItemKNN
+    #   model_checkpoint_path: ItemKNN-Apr-27-2026_02-37-40.pth
+    -
+      model_name: MultiVAE
+      model_checkpoint_path: MultiVAE-Apr-27-2026_02-50-15.pth
+    -
+      model_name: NeuMF
+      model_checkpoint_path: NeuMF-Apr-27-2026_02-50-29.pth
+    -
+      model_name: SLIMElastic
+      model_checkpoint_path: SLIMElastic-Apr-27-2026_02-45-53.pth
+
+-
+  dataset_name: ml1m
+  input_path: data/random/recbole/ml1m/saved/
+  output_path: data/random/recoxplainer/ml1m
+  models:
+    - 
+      model_name: BPR
+      model_checkpoint_path: BPR-Apr-27-2026_03-55-47.pth
+    -
+      model_name: MultiVAE
+      model_checkpoint_path: MultiVAE-Apr-27-2026_04-45-46.pth
+    -
+      model_name: NeuMF
+      model_checkpoint_path: NeuMF-Apr-27-2026_04-55-00.pth
+    -
+      model_name: SLIMElastic
+      model_checkpoint_path: SLIMElastic-Apr-27-2026_04-05-43.pth
+
+-
+  dataset_name: coat
+  input_path: data/random/recbole/coat/saved/
+  output_path: data/random/recoxplainer/coat
+  models:
+    - 
+      model_name: BPR
+      model_checkpoint_path: BPR-Apr-27-2026_04-57-51.pth
+    -
+      model_name: MultiVAE
+      model_checkpoint_path: MultiVAE-Apr-27-2026_04-58-10.pth
+    -
+      model_name: NeuMF
+      model_checkpoint_path: NeuMF-Apr-27-2026_04-58-12.pth
+    -
+      model_name: SLIMElastic
+      model_checkpoint_path: SLIMElastic-Apr-27-2026_04-57-53.pth
+
+-
+  dataset_name: eletronics
+  input_path: data/random/recbole/eletronics/saved/
+  output_path: data/random/recoxplainer/eletronics
+  models:
+    - 
+      model_name: BPR
+      model_checkpoint_path: BPR-Apr-27-2026_04-58-17.pth
+    -
+      model_name: MultiVAE
+      model_checkpoint_path: MultiVAE-Apr-27-2026_08-19-36.pth
+    -
+      model_name: NeuMF
+      model_checkpoint_path: NeuMF-Apr-27-2026_08-26-43.pth
+    -
+      model_name: SLIMElastic
+      model_checkpoint_path: SLIMElastic-Apr-27-2026_07-30-25.pth
+
+-
+  dataset_name: amazon
+  input_path: data/random/recbole/amazon/saved/
+  output_path: data/random/recoxplainer/amazon
+  models:
+    - 
+      model_name: BPR
+      model_checkpoint_path: BPR-Apr-27-2026_08-43-42.pth

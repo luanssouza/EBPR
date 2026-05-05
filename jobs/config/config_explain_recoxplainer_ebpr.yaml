@@ -1,0 +1,69 @@
+# -
+#   dataset_name: ml100k
+#   input_path: Output/checkpoints
+#   output_path: Output/recoxplainer/ml100k
+#   mapping_path: Output/ml-100k_mapped_dataset.csv
+#   models:
+#     - 
+#       model_name: BPR
+#       model_checkpoint_path: BPR_ml-100k_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch41_NDCG@10_0.3447_HR@10_0.6320_MEP@10_0.8999_WMEP@10_0.2753_Avg_Pop@10_0.4825_EFD@10_1.1740_Avg_Pair_Sim@10_0.2226.model
+#     -
+#       model_name: EBPR
+#       model_checkpoint_path: EBPR_ml-100k_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch48_NDCG@10_0.3490_HR@10_0.6214_MEP@10_0.9130_WMEP@10_0.2921_Avg_Pop@10_0.4866_EFD@10_1.1523_Avg_Pair_Sim@10_0.2289.model
+#     -
+#       model_name: UBPR
+#       model_checkpoint_path: UBPR_ml-100k_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch46_NDCG@10_0.3299_HR@10_0.6087_MEP@10_0.8895_WMEP@10_0.2649_Avg_Pop@10_0.4588_EFD@10_1.2649_Avg_Pair_Sim@10_0.2102.model
+#     -
+#       model_name: UEBPR
+#       model_checkpoint_path: UEBPR_ml-100k_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch47_NDCG@10_0.3250_HR@10_0.6013_MEP@10_0.8931_WMEP@10_0.2705_Avg_Pop@10_0.4418_EFD@10_1.3317_Avg_Pair_Sim@10_0.2073.model
+
+# -
+#   dataset_name: ml1m
+#   input_path: Output/checkpoints
+#   output_path: Output/recoxplainer/ml1m
+#   mapping_path: Output/ml-1m_mapped_dataset.csv
+#   models:
+#     - 
+#       model_name: BPR
+#       model_checkpoint_path: BPR_ml-1m_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch25_NDCG@10_0.3703_HR@10_0.6478_MEP@10_0.8383_WMEP@10_0.2115_Avg_Pop@10_0.4415_EFD@10_1.3125_Avg_Pair_Sim@10_0.1974.model
+#     -
+#       model_name: EBPR
+#       model_checkpoint_path: EBPR_ml-1m_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch31_NDCG@10_0.3772_HR@10_0.6568_MEP@10_0.8729_WMEP@10_0.2284_Avg_Pop@10_0.4476_EFD@10_1.2844_Avg_Pair_Sim@10_0.2028.model
+#     -
+#       model_name: UBPR
+#       model_checkpoint_path: UBPR_ml-1m_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch20_NDCG@10_0.3517_HR@10_0.6303_MEP@10_0.8239_WMEP@10_0.2048_Avg_Pop@10_0.4151_EFD@10_1.4216_Avg_Pair_Sim@10_0.1850.model
+#     -
+#       model_name: UEBPR
+#       model_checkpoint_path: UEBPR_ml-1m_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch36_NDCG@10_0.3511_HR@10_0.6265_MEP@10_0.8494_WMEP@10_0.2138_Avg_Pop@10_0.4104_EFD@10_1.4421_Avg_Pair_Sim@10_0.1845.model
+
+-
+  dataset_name: coat
+  input_path: Output/checkpoints
+  output_path: Output/recoxplainer/coat
+  mapping_path: Output/coat_mapped_dataset.csv
+  models:
+    - 
+      model_name: BPR
+      model_checkpoint_path: BPR_coat_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch8_NDCG@10_0.1618_HR@10_0.2862_MEP@10_0.9897_WMEP@10_0.2239_Avg_Pop@10_0.7128_EFD@10_0.5072_Avg_Pair_Sim@10_0.1874.model
+    -
+      model_name: EBPR
+      model_checkpoint_path: EBPR_coat_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch13_NDCG@10_0.1805_HR@10_0.3310_MEP@10_0.9883_WMEP@10_0.2297_Avg_Pop@10_0.7090_EFD@10_0.5147_Avg_Pair_Sim@10_0.1869.model
+    -
+      model_name: UBPR
+      model_checkpoint_path: UBPR_coat_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch9_NDCG@10_0.1581_HR@10_0.3034_MEP@10_0.9821_WMEP@10_0.2198_Avg_Pop@10_0.6906_EFD@10_0.5564_Avg_Pair_Sim@10_0.1754.model
+    -
+      model_name: UEBPR
+      model_checkpoint_path: UEBPR_coat_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch14_NDCG@10_0.1859_HR@10_0.3448_MEP@10_0.9883_WMEP@10_0.2291_Avg_Pop@10_0.6904_EFD@10_0.5559_Avg_Pair_Sim@10_0.1761.model
+
+# -rwxr--r-- 1 luanssouza luanssouza  121504 Apr 28 22:55 BPR_coat_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch8_NDCG@10_0.1618_HR@10_0.2862_MEP@10_0.9897_WMEP@10_0.2239_Avg_Pop@10_0.7128_EFD@10_0.5072_Avg_Pair_Sim@10_0.1874.model
+# -rwxr--r-- 1 luanssouza luanssouza  522424 Apr 28 22:55 BPR_ml-100k_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch41_NDCG@10_0.3447_HR@10_0.6320_MEP@10_0.8999_WMEP@10_0.2753_Avg_Pop@10_0.4825_EFD@10_1.1740_Avg_Pair_Sim@10_0.2226.model
+# -rwxr--r-- 1 luanssouza luanssouza 1947692 Apr 28 22:55 BPR_ml-1m_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch25_NDCG@10_0.3703_HR@10_0.6478_MEP@10_0.8383_WMEP@10_0.2115_Avg_Pop@10_0.4415_EFD@10_1.3125_Avg_Pair_Sim@10_0.1974.model
+# -rwxr--r-- 1 luanssouza luanssouza  121516 Apr 28 22:55 EBPR_coat_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch13_NDCG@10_0.1805_HR@10_0.3310_MEP@10_0.9883_WMEP@10_0.2297_Avg_Pop@10_0.7090_EFD@10_0.5147_Avg_Pair_Sim@10_0.1869.model
+# -rwxr--r-- 1 luanssouza luanssouza  522430 Apr 28 22:55 EBPR_ml-100k_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch48_NDCG@10_0.3490_HR@10_0.6214_MEP@10_0.9130_WMEP@10_0.2921_Avg_Pop@10_0.4866_EFD@10_1.1523_Avg_Pair_Sim@10_0.2289.model
+# -rwxr--r-- 1 luanssouza luanssouza 1947762 Apr 28 22:55 EBPR_ml-1m_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch31_NDCG@10_0.3772_HR@10_0.6568_MEP@10_0.8729_WMEP@10_0.2284_Avg_Pop@10_0.4476_EFD@10_1.2844_Avg_Pair_Sim@10_0.2028.model
+# -rwxr--r-- 1 luanssouza luanssouza  121510 Apr 28 22:55 UBPR_coat_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch9_NDCG@10_0.1581_HR@10_0.3034_MEP@10_0.9821_WMEP@10_0.2198_Avg_Pop@10_0.6906_EFD@10_0.5564_Avg_Pair_Sim@10_0.1754.model
+# -rwxr--r-- 1 luanssouza luanssouza  522430 Apr 28 22:55 UBPR_ml-100k_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch46_NDCG@10_0.3299_HR@10_0.6087_MEP@10_0.8895_WMEP@10_0.2649_Avg_Pop@10_0.4588_EFD@10_1.2649_Avg_Pair_Sim@10_0.2102.model
+# -rwxr--r-- 1 luanssouza luanssouza 1947762 Apr 28 22:55 UBPR_ml-1m_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch20_NDCG@10_0.3517_HR@10_0.6303_MEP@10_0.8239_WMEP@10_0.2048_Avg_Pop@10_0.4151_EFD@10_1.4216_Avg_Pair_Sim@10_0.1850.model
+# -rwxr--r-- 1 luanssouza luanssouza  121586 Apr 28 22:55 UEBPR_coat_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch14_NDCG@10_0.1859_HR@10_0.3448_MEP@10_0.9883_WMEP@10_0.2291_Avg_Pop@10_0.6904_EFD@10_0.5559_Avg_Pair_Sim@10_0.1761.model
+# -rwxr--r-- 1 luanssouza luanssouza  522436 Apr 28 22:55 UEBPR_ml-100k_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch47_NDCG@10_0.3250_HR@10_0.6013_MEP@10_0.8931_WMEP@10_0.2705_Avg_Pop@10_0.4418_EFD@10_1.3317_Avg_Pair_Sim@10_0.2073.model
+# -rwxr--r-- 1 luanssouza luanssouza 1947768 Apr 28 22:55 UEBPR_ml-1m_batchsize_100_opt_adam_lr_0.001_latent_50_l2reg_0.0_Epoch36_NDCG@10_0.3511_HR@10_0.6265_MEP@10_0.8494_WMEP@10_0.2138_Avg_Pop@10_0.4104_EFD@10_1.4421_Avg_Pair_Sim@10_0.1845.model

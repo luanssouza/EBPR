@@ -63,9 +63,9 @@ class Engine(object):
             # bar.update()
             assert isinstance(batch[0], torch.LongTensor)
             user, pos_item, neg_item, rating = batch[0], batch[1], batch[2], batch[3]
-            print("Isso aqui é um teste!")
-            print(user)
-            break
+            # print("Isso aqui é um teste!")
+            # print(user)
+            # break
             loss = self.train_single_batch_EBPR(user, pos_item, neg_item, rating, explainability_matrix, popularity_vector, neighborhood)
             total_loss += loss
 

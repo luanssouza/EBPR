@@ -1,0 +1,65 @@
+# -
+#   dataset_name: ml100k
+#   config_path: data/random/recbole/ml100k
+#   models:
+#     - BPR
+#     - SLIMElastic
+#     - MultiVAE
+#     - NeuMF
+# -
+#   dataset_name: ml1m
+#   config_path: data/random/recbole/ml1m
+#   models:
+#     - BPR
+#     - SLIMElastic
+#     - MultiVAE
+#     - NeuMF
+# -
+#   dataset_name: coat
+#   config_path: data/random/recbole/coat
+#   models:
+#     - BPR
+#     - SLIMElastic
+#     - MultiVAE
+#     - NeuMF
+# -
+#   dataset_name: eletronics
+#   config_path: data/random/recbole/eletronics
+#   models:
+#     - BPR
+#     - SLIMElastic
+#     - MultiVAE
+#     - NeuMF
+# -
+#   dataset_name: amazon
+#   config_path: data/random/recbole/amazon
+#   models:
+#     - BPR
+#     - SLIMElastic
+#     - MultiVAE
+#     - NeuMF
+# -
+#   dataset_name: rentrunway
+#   config_path: data/random/rentrunway
+#   models:
+#     - BPR
+#     - SLIMElastic
+#     - MultiVAE
+#     - NeuMF
+-
+  dataset_name: ambar
+  config_path: data/random/recbole/ambar
+  models:
+    # - BPR
+    # - SLIMElastic
+    - MultiVAE
+    - NeuMF
+
+-
+  dataset_name: ambar
+  config_path: data/random/recbole/ambar
+  models:
+    # - BPR
+    - SLIMElastic
+    # - MultiVAE
+    # - NeuMF
