@@ -244,10 +244,10 @@ class SampleGenerator(object):
         interact_status = ratings.groupby('userId')['itemId'].apply(set).reset_index().rename(
             columns={'itemId': 'interacted_items'})
         interact_status['negative_items'] = interact_status['interacted_items'].apply(lambda x: self.item_pool - x)
-        interact_status['test_negative_samples'] = interact_status['negative_items'].apply(lambda x: random.sample(x, 100))
+        interact_status['test_negative_samples'] = interact_status['negative_items'].apply(lambda x: random.sample(sorted(x), 100))
         interact_status['negative_items'] = interact_status.apply(lambda x: (x.negative_items - set(x.test_negative_samples)), axis=1)
         if split_val:
-            interact_status['val_negative_samples'] = interact_status['negative_items'].apply(lambda x: random.sample(x, 100))
+            interact_status['val_negative_samples'] = interact_status['negative_items'].apply(lambda x: random.sample(sorted(x), 100))
             interact_status['negative_items'] = interact_status.apply(lambda x: (x.negative_items - set(x.val_negative_samples)), axis=1)
             return interact_status[['userId', 'negative_items', 'test_negative_samples', 'val_negative_samples']]
         else:
@@ -333,8 +333,19 @@ class SampleGenerator(object):
             interaction_matrix = np.array(interaction_matrix[list(range(self.config['num_items']))].sort_index())
         elif not self.split_val:
             print('Creating test explainability matrix...')
-            interaction_matrix = np.array(pd.crosstab(self.preprocess_ratings.userId, self.preprocess_ratings.itemId)[
-                                              list(range(self.config['num_items']))].sort_index())
+            # BUGFIX (rexbench): pad missing columns/rows exactly as the `if not include_test`
+            # branch above already does. Without it this branch assumes every item in
+            # range(num_items) appears in preprocess_ratings, and raises
+            # KeyError: '[...] not in index' for any item absent from it. The branch 20 lines
+            # up handles this case; this one was simply never given the same treatment.
+            interaction_matrix = pd.crosstab(self.preprocess_ratings.userId, self.preprocess_ratings.itemId)
+            missing_columns = list(set(range(self.config['num_items'])) - set(list(interaction_matrix)))
+            missing_rows = list(set(range(self.config['num_users'])) - set(interaction_matrix.index))
+            for missing_column in missing_columns:
+                interaction_matrix[missing_column] = [0] * len(interaction_matrix)
+            for missing_row in missing_rows:
+                interaction_matrix.loc[missing_row] = [0] * self.config['num_items']
+            interaction_matrix = np.array(interaction_matrix[list(range(self.config['num_items']))].sort_index())
         else:
             print('Creating val explainability matrix...')
             interaction_matrix = pd.crosstab(self.train_ratings.userId.append(self.val_ratings.userId), self.train_ratings.itemId.append(self.val_ratings.itemId))
@@ -358,10 +369,14 @@ class SampleGenerator(object):
                                           range(self.config['num_users'])]) / self.config['neighborhood']
         #explainability_matrix[explainability_matrix < 0.1] = 0
         #explainability_matrix = explainability_matrix + self.config['epsilon']
-        np.save(f'Output/results/interaction_matrix_{self.config["dataset"]}_{include_test}.npy', interaction_matrix)
-        np.save(f'Output/results/item_similarity_matrix_{self.config["dataset"]}_{include_test}.npy', item_similarity_matrix)
-        np.save(f'Output/results/neighborhood_{self.config["dataset"]}_{include_test}.npy', neighborhood)
-        np.save(f'Output/results/explainability_matrix_{self.config["dataset"]}_{include_test}.npy', explainability_matrix)
+        # REMOVED (rexbench): four np.save() calls that dumped interaction_matrix,
+        # item_similarity_matrix, neighborhood and explainability_matrix to Output/results/
+        # on every call. Nothing ever read them back -- there is no np.load anywhere in this
+        # codebase or in rexbench -- and all four objects are returned in memory on the very
+        # next line, so the writes were pure dead I/O. They cost 587 GB across a full
+        # rexbench run (electronics alone: 17.9 GB per fit, x15 fits), which is a disk-space
+        # blocker on a rented machine, not just a slowdown. Removing them cannot change any
+        # result: the returned values are identical.
         return interaction_matrix, neighborhood, item_similarity_matrix, explainability_matrix
 
     def create_popularity_vector(self, include_test=False):
@@ -378,8 +393,19 @@ class SampleGenerator(object):
             interaction_matrix = np.array(interaction_matrix[list(range(self.config['num_items']))].sort_index())
         elif not self.split_val:
             print('Creating test popularity vector...')
-            interaction_matrix = np.array(pd.crosstab(self.preprocess_ratings.userId, self.preprocess_ratings.itemId)[
-                                              list(range(self.config['num_items']))].sort_index())
+            # BUGFIX (rexbench): pad missing columns/rows exactly as the `if not include_test`
+            # branch above already does. Without it this branch assumes every item in
+            # range(num_items) appears in preprocess_ratings, and raises
+            # KeyError: '[...] not in index' for any item absent from it. The branch 20 lines
+            # up handles this case; this one was simply never given the same treatment.
+            interaction_matrix = pd.crosstab(self.preprocess_ratings.userId, self.preprocess_ratings.itemId)
+            missing_columns = list(set(range(self.config['num_items'])) - set(list(interaction_matrix)))
+            missing_rows = list(set(range(self.config['num_users'])) - set(interaction_matrix.index))
+            for missing_column in missing_columns:
+                interaction_matrix[missing_column] = [0] * len(interaction_matrix)
+            for missing_row in missing_rows:
+                interaction_matrix.loc[missing_row] = [0] * self.config['num_items']
+            interaction_matrix = np.array(interaction_matrix[list(range(self.config['num_items']))].sort_index())
         else:
             print('Creating val popularity vector...')
             interaction_matrix = pd.crosstab(self.train_ratings.userId.append(self.val_ratings.userId),
@@ -409,8 +435,19 @@ class SampleGenerator(object):
             interaction_matrix = np.array(interaction_matrix[list(range(self.config['num_items']))].sort_index())
         elif not self.split_val:
             print('Determining test item neighborhoods...')
-            interaction_matrix = np.array(pd.crosstab(self.preprocess_ratings.userId, self.preprocess_ratings.itemId)[
-                                              list(range(self.config['num_items']))].sort_index())
+            # BUGFIX (rexbench): pad missing columns/rows exactly as the `if not include_test`
+            # branch above already does. Without it this branch assumes every item in
+            # range(num_items) appears in preprocess_ratings, and raises
+            # KeyError: '[...] not in index' for any item absent from it. The branch 20 lines
+            # up handles this case; this one was simply never given the same treatment.
+            interaction_matrix = pd.crosstab(self.preprocess_ratings.userId, self.preprocess_ratings.itemId)
+            missing_columns = list(set(range(self.config['num_items'])) - set(list(interaction_matrix)))
+            missing_rows = list(set(range(self.config['num_users'])) - set(interaction_matrix.index))
+            for missing_column in missing_columns:
+                interaction_matrix[missing_column] = [0] * len(interaction_matrix)
+            for missing_row in missing_rows:
+                interaction_matrix.loc[missing_row] = [0] * self.config['num_items']
+            interaction_matrix = np.array(interaction_matrix[list(range(self.config['num_items']))].sort_index())
         else:
             print('Determining val item neighborhoods...')
             interaction_matrix = pd.crosstab(self.train_ratings.userId.append(self.val_ratings.userId),

@@ -1,3 +1,5 @@
+import copy
+
 import torch
 from Code.utils import save_checkpoint, use_optimizer, resume_checkpoint
 from Code.metrics import MetronAtK
@@ -146,7 +148,7 @@ class Engine(object):
             best_performance[5] = efd
             best_performance[6] = avg_pair_sim
             best_performance[7] = epoch_id
-            best_model = self.model
+            best_model = copy.deepcopy(self.model)
         if epoch_id == num_epoch - 1:
             alias = self.config['model'] + '_' + self.config['dataset'] + '_batchsize_' + str(self.config['batch_size']) + '_opt_' + str(self.config['optimizer']) + '_lr_' + str(self.config['lr']) + '_latent_' + str(self.config['num_latent']) + '_l2reg_' + str(self.config['l2_regularization'])
             model_dir = self.config['model_dir_explicit'].format(alias, best_performance[7], self.config['top_k'], best_performance[0], self.config['top_k'], best_performance[1], self.config['top_k'], best_performance[2], self.config['top_k'], best_performance[3], self.config['top_k'], best_performance[4], self.config['top_k'], best_performance[5], self.config['top_k'], best_performance[6])
@@ -158,6 +160,14 @@ class Engine(object):
     def save_implicit(self, epoch_id, ndcg, hr, mep, wmep, avg_pop, efd, avg_pair_sim, num_epoch, best_model, best_performance, save_models):
         assert hasattr(self, 'model'), 'Please specify the exact model !'
         if ndcg > best_performance[0]:
+            # BUGFIX (rexbench): this used to do `best_model = self.model`, storing a
+            # REFERENCE to the live model. Training keeps mutating that same object in
+            # place, so best_model always ended up holding the FINAL epoch's weights, not
+            # the best ones -- and save_checkpoint(best_model, ...) therefore wrote the
+            # final epoch to disk under the best epoch's filename. best_performance (the
+            # metrics) was correct, so the saved model and its reported score disagreed.
+            # deepcopy takes a real snapshot. The model is a pair of embedding tables
+            # (~1 MB even for lastfm1k), so the copy is cheap.
             best_performance[0] = ndcg
             best_performance[1] = hr
             best_performance[2] = mep
@@ -166,7 +176,7 @@ class Engine(object):
             best_performance[5] = efd
             best_performance[6] = avg_pair_sim
             best_performance[7] = epoch_id
-            best_model = self.model
+            best_model = copy.deepcopy(self.model)
         if epoch_id == num_epoch - 1:
             alias = self.config['model'] + '_' + self.config['dataset'] + '_batchsize_' + str(self.config['batch_size']) + '_opt_' + str(self.config['optimizer']) + '_lr_' + str(self.config['lr']) + '_latent_' + str(self.config['num_latent']) + '_l2reg_' + str(self.config['l2_regularization'])
             model_dir = self.config['model_dir_implicit'].format(alias, best_performance[7], self.config['top_k'], best_performance[0], self.config['top_k'], best_performance[1], self.config['top_k'], best_performance[2], self.config['top_k'], best_performance[3], self.config['top_k'], best_performance[4], self.config['top_k'], best_performance[5], self.config['top_k'], best_performance[6])

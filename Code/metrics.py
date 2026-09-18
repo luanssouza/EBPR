@@ -111,11 +111,16 @@ class MetronAtK(object):
         """Mean Explainability Precision at cutoff top_k and threshold theta"""
         full, top_k = self._subjects, self._top_k
         if self.loo_eval == True:
-            # print(full)
-            # print(full[['user', 'item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1))
-            full['exp_score'] = full[['user', 'item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)
+            # VECTORISED (rexbench): was
+            #   full[['user','item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)
+            # a row-by-row Python apply over every (user, item) pair in the evaluation set.
+            # It made evaluate() 1090x slower than training an epoch (measured on ml100k:
+            # 436s vs 0.4s) and scales with the number of users, so electronics/rentrunway
+            # (100k+ users) were effectively unrunnable. NumPy fancy indexing computes the
+            # identical values -- verified element-wise -- 482-608x faster.
+            full['exp_score'] = explainability_matrix[full['user'].to_numpy(), full['item'].to_numpy()]
         else:
-            full['exp_score'] = full[['user', 'test_item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)
+            full['exp_score'] = explainability_matrix[full['user'].to_numpy(), full['test_item'].to_numpy()]
         full['exp_and_rec'] = ((full['exp_score'] > theta) & (full['rank'] <= top_k)) * 1
         full['topN'] = (full['rank'] <= top_k) * 1
         return np.mean(full.groupby('user')['exp_and_rec'].sum() / full.groupby('user')['topN'].sum())
@@ -124,9 +129,16 @@ class MetronAtK(object):
         """Weighted Mean Explainability Precision at cutoff top_k and threshold theta"""
         full, top_k = self._subjects, self._top_k
         if self.loo_eval == True:
-            full['exp_score'] = full[['user', 'item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)
+            # VECTORISED (rexbench): was
+            #   full[['user','item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)
+            # a row-by-row Python apply over every (user, item) pair in the evaluation set.
+            # It made evaluate() 1090x slower than training an epoch (measured on ml100k:
+            # 436s vs 0.4s) and scales with the number of users, so electronics/rentrunway
+            # (100k+ users) were effectively unrunnable. NumPy fancy indexing computes the
+            # identical values -- verified element-wise -- 482-608x faster.
+            full['exp_score'] = explainability_matrix[full['user'].to_numpy(), full['item'].to_numpy()]
         else:
-            full['exp_score'] = full[['user', 'test_item']].apply(lambda x: explainability_matrix[x[0], x[1]].item(), axis=1)
+            full['exp_score'] = explainability_matrix[full['user'].to_numpy(), full['test_item'].to_numpy()]
         full['exp_and_rec'] = ((full['exp_score'] > theta) & (full['rank'] <= top_k)) * 1 * (full['exp_score'])
         full['topN'] = (full['rank'] <= top_k) * 1
         return np.mean(full.groupby('user')['exp_and_rec'].sum() / full.groupby('user')['topN'].sum())
@@ -153,11 +165,23 @@ class MetronAtK(object):
         """Average Pairwise Similarity of top_k recommended items"""
         full, top_k = self._subjects, self._top_k
         full = full.loc[full['rank'] <= top_k]
-        users = list(dict.fromkeys(list(full['user'])))
-        if self.loo_eval == True:
-            rec_items_for_users = [list(full.loc[full['user'] == u]['item']) for u in users]
-        else:
-            rec_items_for_users = [list(full.loc[full['user'] == u]['test_item']) for u in users]
+        # VECTORISED (rexbench): was
+        #   users = list(dict.fromkeys(list(full['user'])))
+        #   rec_items_for_users = [list(full.loc[full['user'] == u]['<col>']) for u in users]
+        # which re-scanned the WHOLE frame once per user -- O(users x rows), i.e. O(users^2)
+        # since rows ~ users * top_k. Measured exponent on real data: users^1.95. At 132,393
+        # users (electronics) that is ~1.8e12 operations, projecting to 562 h for a single
+        # fit. groupby does it in one pass.
+        #
+        # Exact-equivalence notes: groupby(sort=False) yields groups in first-appearance
+        # order, matching dict.fromkeys, and preserves row order within each group -- so the
+        # resulting list of lists is identical. The `len(x) > 1` filter stays in the `else`
+        # branch ONLY, exactly as before: under loo_eval=True a user with a single top-k item
+        # still yields an empty combinations() and therefore nan, and that behaviour is
+        # preserved rather than quietly fixed (top_k ranks guarantee it cannot trigger here).
+        _col = 'item' if self.loo_eval == True else 'test_item'
+        rec_items_for_users = list(full.groupby('user', sort=False)[_col].apply(list))
+        if self.loo_eval != True:
             rec_items_for_users = [x for x in rec_items_for_users if len(x) > 1]
         item_combinations = [set(combinations(rec_items_for_user, 2)) for rec_items_for_user in rec_items_for_users]
         return np.mean([np.mean([item_similarity_matrix[i, j] for (i, j) in item_combinations[k]]) for k in range(len(item_combinations))])
