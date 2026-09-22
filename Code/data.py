@@ -184,6 +184,7 @@ class SampleGenerator(object):
         self.preprocess_ratings = self._binarize(ratings)
         self.user_pool = set(self.ratings['userId'].unique())
         self.item_pool = set(self.ratings['itemId'].unique())
+        self._item_pool_list = sorted(self.item_pool)  # built once; indexable for rejection sampling
         # create negative item samples
         self.negatives = self._sample_negative(ratings, self.split_val)
         if self.config['loo_eval']:
@@ -239,28 +240,79 @@ class SampleGenerator(object):
         assert train['userId'].nunique() == test['userId'].nunique()
         return train[['userId', 'itemId', 'rating']], test[['userId', 'itemId', 'rating']]
 
+    def _sample_unseen(self, excluded, n):
+        """n distinct items drawn uniformly from item_pool minus `excluded`, by rejection —
+        without ever materialising the complement. Falls back to the explicit complement for
+        the rare user who has seen nearly the whole catalogue, where rejection would spin."""
+        pool = self._item_pool_list
+        remaining = len(pool) - len(excluded)
+        if remaining <= n * 2:                      # dense user: complement is small anyway
+            return random.sample(sorted(self.item_pool - set(excluded)), min(n, max(remaining, 0)))
+        picked, seen = [], set()
+        while len(picked) < n:
+            candidate = pool[random.randrange(len(pool))]
+            if candidate in excluded or candidate in seen:
+                continue
+            seen.add(candidate)
+            picked.append(candidate)
+        return picked
+
     def _sample_negative(self, ratings, split_val):
-        """return all negative items & 100 sampled negative test items & 100 sampled negative val items"""
+        """Per-user excluded set + 100 sampled test (and val) negatives.
+
+        REWRITTEN (rexbench): this used to materialise, for every user, a Python set holding
+        every item that user had NOT interacted with:
+
+            interact_status['negative_items'] = interacted.apply(lambda x: self.item_pool - x)
+
+        That is O(users x items) Python objects — measured at ~30 bytes per entry, so
+        1.08 billion entries and ~32 GB for electronics (132,393 users x 8,188 items) and
+        ~18 GB for rentrunway, before any model matrix. Both datasets were unrunnable on a
+        32 GB machine for this reason alone, and the cost had nothing to do with the method.
+
+        What is stored now is `excluded_items` = the user's own interactions plus their
+        sampled evaluation negatives, i.e. O(interactions + 100 x users) — 0.4 GB for
+        electronics instead of 32 GB. Training negatives are drawn by rejection against that
+        set in train_data_loader, which is the same uniform distribution over the same
+        candidate items; only the random sequence differs, exactly as it already did after
+        the random.sample(sorted(x)) compatibility fix.
+        """
         interact_status = ratings.groupby('userId')['itemId'].apply(set).reset_index().rename(
             columns={'itemId': 'interacted_items'})
-        interact_status['negative_items'] = interact_status['interacted_items'].apply(lambda x: self.item_pool - x)
-        interact_status['test_negative_samples'] = interact_status['negative_items'].apply(lambda x: random.sample(sorted(x), 100))
-        interact_status['negative_items'] = interact_status.apply(lambda x: (x.negative_items - set(x.test_negative_samples)), axis=1)
+        interact_status['test_negative_samples'] = interact_status['interacted_items'].apply(
+            lambda seen: self._sample_unseen(seen, 100))
         if split_val:
-            interact_status['val_negative_samples'] = interact_status['negative_items'].apply(lambda x: random.sample(sorted(x), 100))
-            interact_status['negative_items'] = interact_status.apply(lambda x: (x.negative_items - set(x.val_negative_samples)), axis=1)
-            return interact_status[['userId', 'negative_items', 'test_negative_samples', 'val_negative_samples']]
-        else:
-            return interact_status[['userId', 'negative_items', 'test_negative_samples']]
+            interact_status['val_negative_samples'] = interact_status.apply(
+                lambda r: self._sample_unseen(r.interacted_items | set(r.test_negative_samples), 100), axis=1)
+            interact_status['excluded_items'] = interact_status.apply(
+                lambda r: r.interacted_items | set(r.test_negative_samples) | set(r.val_negative_samples), axis=1)
+            return interact_status[['userId', 'excluded_items', 'test_negative_samples', 'val_negative_samples']]
+        interact_status['excluded_items'] = interact_status.apply(
+            lambda r: r.interacted_items | set(r.test_negative_samples), axis=1)
+        return interact_status[['userId', 'excluded_items', 'test_negative_samples']]
+
+    def _draw_negative(self, excluded):
+        """One item drawn uniformly from item_pool minus `excluded` (see _sample_negative)."""
+        pool = self._item_pool_list
+        for _ in range(100):
+            candidate = pool[random.randrange(len(pool))]
+            if candidate not in excluded:
+                return candidate
+        remaining = self.item_pool - set(excluded)   # dense user: fall back to the complement
+        return random.choice(sorted(remaining)) if remaining else pool[random.randrange(len(pool))]
 
     def train_data_loader(self, batch_size):
         """instance train loader for one training epoch"""
-        train_ratings = pd.merge(self.train_ratings, self.negatives[['userId', 'negative_items']], on='userId')
-        
+        train_ratings = pd.merge(self.train_ratings, self.negatives[['userId', 'excluded_items']], on='userId')
+
         users = [int(x) for x in train_ratings['userId']]
         items = [int(x) for x in train_ratings['itemId']]
         ratings = [float(x) for x in train_ratings['rating']]
-        neg_items = [random.choice(list(neg_list)) for neg_list in train_ratings['negative_items']]
+        # Rejection sampling instead of `random.choice(list(neg_list))`. The old line rebuilt
+        # a list of the user's ENTIRE negative set for every single training row — 700k rows
+        # x ~3,700 items on ml1m — which is why the loader cost more than the training step
+        # it feeds. One draw plus a membership test is the same uniform distribution.
+        neg_items = [self._draw_negative(excluded) for excluded in train_ratings['excluded_items']]
         dataset = data_loader(user_tensor=torch.LongTensor(users),
                               positive_item_tensor=torch.LongTensor(items),
                               negative_item_tensor=torch.LongTensor(neg_items),
