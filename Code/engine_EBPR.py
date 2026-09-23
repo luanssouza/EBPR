@@ -153,7 +153,9 @@ class Engine(object):
             alias = self.config['model'] + '_' + self.config['dataset'] + '_batchsize_' + str(self.config['batch_size']) + '_opt_' + str(self.config['optimizer']) + '_lr_' + str(self.config['lr']) + '_latent_' + str(self.config['num_latent']) + '_l2reg_' + str(self.config['l2_regularization'])
             model_dir = self.config['model_dir_explicit'].format(alias, best_performance[7], self.config['top_k'], best_performance[0], self.config['top_k'], best_performance[1], self.config['top_k'], best_performance[2], self.config['top_k'], best_performance[3], self.config['top_k'], best_performance[4], self.config['top_k'], best_performance[5], self.config['top_k'], best_performance[6])
             print('Best model: ' + model_dir)
-            if save_models:
+            # Same guard as save_implicit below: best_model is seeded as '' and only
+            # replaced when an epoch beats the previous best, so it can still be a string here.
+            if save_models and isinstance(best_model, torch.nn.Module):
                 save_checkpoint(best_model, model_dir)
         return best_model, best_performance
 
@@ -181,7 +183,22 @@ class Engine(object):
             alias = self.config['model'] + '_' + self.config['dataset'] + '_batchsize_' + str(self.config['batch_size']) + '_opt_' + str(self.config['optimizer']) + '_lr_' + str(self.config['lr']) + '_latent_' + str(self.config['num_latent']) + '_l2reg_' + str(self.config['l2_regularization'])
             model_dir = self.config['model_dir_implicit'].format(alias, best_performance[7], self.config['top_k'], best_performance[0], self.config['top_k'], best_performance[1], self.config['top_k'], best_performance[2], self.config['top_k'], best_performance[3], self.config['top_k'], best_performance[4], self.config['top_k'], best_performance[5], self.config['top_k'], best_performance[6])
             print('Best model: ' + model_dir)
-            if save_models:
+            # BUGFIX (rexbench): guard on best_model actually being a module. It is seeded as
+            # the string '' (train_EBPR.py does the same) and only replaced inside the
+            # `ndcg > best_performance[0]` branch above -- so on a dataset where no epoch ever
+            # beats the initial score of 0.0, it is still '' here and save_checkpoint does
+            # ''.state_dict(), raising AttributeError and losing the whole fit.
+            #
+            # Not hypothetical: measured on electronics and amazon_digital_music (1.2 and 1.3
+            # interactions per user), where NDCG stays at 0.0 for every epoch. Pre-existing --
+            # the original `best_model = self.model` sat inside the same branch, so it had the
+            # identical hole; it simply never showed on datasets dense enough to score > 0.
+            #
+            # Skipping the write is the correct outcome, not a workaround: if no epoch was ever
+            # the best one, there is no best checkpoint to save. The caller already handles the
+            # '' return (ebpr_adapter.py only adopts best_model when it is an nn.Module), so
+            # the run continues and reports the honest near-zero metrics instead of crashing.
+            if save_models and isinstance(best_model, torch.nn.Module):
                 save_checkpoint(best_model, model_dir)
         return best_model, best_performance
 
