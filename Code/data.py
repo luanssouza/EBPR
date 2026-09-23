@@ -1,6 +1,7 @@
 import torch
 import random
 import numpy as np
+from scipy import sparse
 import pandas as pd
 from copy import deepcopy
 from torch.utils.data import DataLoader, Dataset
@@ -416,9 +417,37 @@ class SampleGenerator(object):
         neighborhood = [np.argpartition(row, - self.config['neighborhood'])[- self.config['neighborhood']:]
                         for row in item_similarity_matrix]
         # print(len(neighborhood), neighborhood[0].shape)
-        explainability_matrix = np.array([[sum([interaction_matrix[user, neighbor] for neighbor in neighborhood[item]])
-                                           for item in range(self.config['num_items'])] for user in
-                                          range(self.config['num_users'])]) / self.config['neighborhood']
+        # VECTORISED (rexbench): was a triple-nested Python loop over
+        # users x items x neighborhood --
+        #   np.array([[sum([interaction_matrix[user, neighbor]
+        #                   for neighbor in neighborhood[item]]) ...
+        # -- i.e. num_users * num_items * k Python-level operations, measured as the
+        # dominant cost of a fit once the other bottlenecks were fixed (16 min on
+        # rentrunway, 29 min on electronics, per fit).
+        #
+        # The definition is E[u, i] = (1/k) * sum over n in neighborhood[i] of M[u, n].
+        # Writing the neighborhood as an indicator matrix N, where N[i, n] = 1 iff n is one
+        # of item i's k nearest neighbours, that sum is exactly a matrix product:
+        #   E = (M @ N.T) / k
+        # N is built sparse (exactly k non-zeros per row, so k*num_items entries total)
+        # and the product is evaluated as N @ M.T to keep it a sparse-times-dense matmul.
+        #
+        # Exactly equivalent, not an approximation: argpartition yields k distinct indices,
+        # so every neighbour is counted once, exactly as the inner `sum` did. The summands
+        # are crosstab counts (integers) held in float64, so the additions are exact and
+        # the result is bit-identical regardless of summation order. The intermediate never
+        # exceeds the size of the output that the original allocated anyway -- notably it
+        # does NOT materialise the (num_users, num_items, k) array that fancy-indexing
+        # would.
+        n_neighbors = self.config['neighborhood']
+        n_items = self.config['num_items']
+        neighbor_indicator = sparse.csr_matrix(
+            (np.ones(n_items * n_neighbors, dtype=np.float64),
+             (np.repeat(np.arange(n_items), n_neighbors),
+              np.concatenate([np.asarray(n) for n in neighborhood]))),
+            shape=(n_items, n_items),
+        )
+        explainability_matrix = neighbor_indicator.dot(interaction_matrix.T).T / n_neighbors
         #explainability_matrix[explainability_matrix < 0.1] = 0
         #explainability_matrix = explainability_matrix + self.config['epsilon']
         # REMOVED (rexbench): four np.save() calls that dumped interaction_matrix,
